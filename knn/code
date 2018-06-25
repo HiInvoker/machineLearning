@@ -186,10 +186,9 @@ print(rmse)
 
 
 
-
-
-
 #用Sklearn来完成KNN
+
+from sklearn.neighbors import KNeighborsRegressor
 
 knn = KNeighborsRegressor(n_neighbors= k)
 #对象实例化
