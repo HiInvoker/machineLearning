@@ -191,7 +191,7 @@ print(rmse)
 
 #用Sklearn来完成KNN
 
-knn = KNeighborsRegressor()
+knn = KNeighborsRegressor(n_neighbors= k)
 #对象实例化
 
 cols = ['accommodates','bedrooms','bathrooms','beds','minimum_nights','maximum_nights','number_of_reviews']
