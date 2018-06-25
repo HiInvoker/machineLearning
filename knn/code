@@ -188,6 +188,7 @@ print(rmse)
 
 #用Sklearn来完成KNN
 
+from sklearn.metrics import mean_squared_error
 from sklearn.neighbors import KNeighborsRegressor
 
 knn = KNeighborsRegressor(n_neighbors= k)
