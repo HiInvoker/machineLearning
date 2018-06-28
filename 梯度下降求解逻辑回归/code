@@ -46,7 +46,7 @@ def model(X, theta):
 4.
 #数据处理，datafram转换成矩阵并且将其分为features label
 
-pd.insert(0, 'Ones', 1)
+df.insert(0, 'Ones', 1)
 #在     第一列 插入 名为Ones 的全为1的数据
 
 orig_data = df.as_matrix()
