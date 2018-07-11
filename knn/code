@@ -10,7 +10,7 @@
 
    优点：精度高，对异常值不敏感、无数据输入假定
 
-　　缺点：计算复杂度高、空间复杂度高
+ 　缺点：计算复杂度高、空间复杂度高
 
 3.python实现：
 
@@ -105,9 +105,9 @@ def predict_price(new_listing_value,feature_column):
     predicted_price = knn_5.mean()
     return(predicted_price)
 
-#应用函数得到（test）对应价格（apply对所有样本执行同样的操作，每个样本都执行了predict_price,会产生931个predicted_price）
+#应用函数得到（test）对应价格（apply对DataFram中所有样本执行同样的操作，每个样本的accommodate数据都是new_listing_value,都执行了predict_price,会产生931个predicted_price）
 test_df['predicted_price'] = test_df.accommodates.apply(predict_price,feature_column='accommodates')
-#这里每次用到的new_listing_value就是对应行数据的'accommodates'
+#这里每次用到的new_listing_value就是对应行数据的'accommodates'的值比如：3，5等
 
 
 #计算均方差RMSE
@@ -142,7 +142,7 @@ dc_listings['price'] = dc_listings.price.str.replace("\$|,",'').astype(float)
 dc_listings = dc_listings.dropna()
 
 dc_listings[features] = StandardScaler().fit_transform(dc_listings[features])
-#！！！！！！！！！！！！！！！！！！！！！！！！！！！注意前面有[features]
+#！！！！！！！！！！！！！！！！！！！！！！！！！！！注意前面必须要有[features]
 
 normalized_listings = dc_listings
 
@@ -155,7 +155,6 @@ norm_train_df = normalized_listings.copy().iloc[0:2792]
 norm_test_df = normalized_listings.copy().iloc[2792:]
 
 #利用scipy计算便变量距离
-
 from scipy.spatial import distance
 
 first_listing = normalized_listings.iloc[0][['accommodates', 'bathrooms']]
@@ -198,7 +197,7 @@ cols = ['accommodates','bedrooms','bathrooms','beds','minimum_nights','maximum_n
 #特征
 
 knn.fit(norm_train_df[cols], norm_train_df['price'])
-#拟合
+#利用选择出来的特征数据去训练模型
 
 four_features_predictions = knn.predict(norm_test_df[cols])
 #得到用test数据计算得到的预测值
