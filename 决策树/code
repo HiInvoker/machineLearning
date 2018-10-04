@@ -1,0 +1,120 @@
+#1.熵的概念：熵度量了事物的不确定性，越不确定的事物，它的熵就越大
+#其中n代表X的n种不同的离散取值。而pi代表了X取值为i的概率，log为以2或者e为底的对数
+#多个变量的联合熵：熟悉了一个变量X的熵，很容易推广到多个个变量的联合熵
+#条件熵：有了联合熵，又可以得到条件熵的表达式H(X|Y)，条件熵类似于条件概率,它度量了我们的X在知道Y以后剩下的不确定性
+
+
+#2.树模型
+
+#决策树：从根节点开始一步步走到叶子节点（决策）
+#所有的数据最终都会落到叶子节点，既可以做分类，也可以做回归。
+
+#3.树的组成：
+#根节点：第一个选择点
+#非叶子节点与分支： 中间过程
+#叶子节点： 最终决策结果
+
+#4.节点：增加节点相当于在数据中切一刀
+
+#5.决策树的训练与测试
+#训练阶段：从给定的训练集构建出一棵树（从根节点开始选择特征，如何进行特征切分）
+#测试阶段：根据构造出来的树模型从上到下走一遍就好了
+
+
+#6.引入模块
+
+import matplotlib.pyplot as plt
+
+import pandas as pd
+
+#7.从sklearn库下载资源
+
+from sklearn.datasets.california_housing import fetch_california_housing
+housing = fetch_california_housing()
+print(housing.DESCR)
+
+#8.引入决策树模块然后加以训练
+
+from sklearn import tree
+dtr = tree.DecisionTreeRegressor(max_depth = 2) #决策树最大深度为2
+dtr.fit(housing.data[:, [6, 7]], housing.target)
+                     #x           y(label)
+
+#9.生成.data文件
+dot_data = \
+    tree.export_graphviz(
+        dtr,  #引入实例化的模型对象
+        out_file = None,
+        feature_names = housing.feature_names[6:8], #引入数据名称
+        filled = True,
+        impurity = False,
+        rounded = True
+    )
+
+#10.利用Pydot和graphviz画出决策树
+
+import pydotplus
+graph = pydotplus.graph_from_dot_data(dot_data) #数据
+graph.get_nodes()[7].set_fillcolor("#FFF2DD")  #颜色
+from IPython.display import Image
+Image(graph.create_png())
+
+#11.生成png图片
+
+graph.write_png("dtr_white_background.png")
+
+#完整的步骤：
+
+#12. 引入数据分割模块切分数据：
+
+from sklearn.model_selection import train_test_split
+data_train, data_test, target_train, target_test = \
+    train_test_split(housing.data, housing.target, test_size = 0.1, random_state = 42)
+dtr = tree.DecisionTreeRegressor(random_state = 42)                  #确保实验可以复现
+#实例化一个决策树模型对象
+dtr.fit(data_train, target_train)
+# 训练模型
+dtr.score(data_test, target_test)
+#评判模型
+
+#13.随机森林
+
+from sklearn.ensemble import RandomForestRegressor
+rfr = RandomForestRegressor( random_state = 42)
+rfr.fit(data_train, target_train)
+rfr.score(data_test, target_test)
+
+#14.树模型的参数选择：
+
+1.criterion gini or entropy
+
+2.splitter best or random 前者是在所有特征中找最好的切分点 后者是在部分特征中（数据量大的时候）
+
+3.max_features None（所有），log2，sqrt，N 特征小于50的时候一般使用所有的
+
+4.max_depth 数据少或者特征少的时候可以不管这个值，如果模型样本量多，特征也多的情况下，可以尝试限制下
+
+5.min_samples_split 如果某节点的样本数少于min_samples_split，则不会继续再尝试选择最优特征来进行划分如果样本量不大，不需要管这个值。如果样本量数量级非常大，则推荐增大这个值。
+
+6.min_samples_leaf 这个值限制了叶子节点最少的样本数，如果某叶子节点数目小于样本数，则会和兄弟节点一起被剪枝，如果样本量不大，不需要管这个值，大些如10W可是尝试下5
+
+7.min_weight_fraction_leaf 这个值限制了叶子节点所有样本权重和的最小值，如果小于这个值，则会和兄弟节点一起被剪枝默认是0，就是不考虑权重问题。一般来说，如果我们有较多样本有缺失值，或者分类树样本的分布类别偏差很大，就会引入样本权重，这时我们就要注意这个值了。
+
+8.max_leaf_nodes 通过限制最大叶子节点数，可以防止过拟合，默认是"None”，即不限制最大的叶子节点数。如果加了限制，算法会建立在最大叶子节点数内最优的决策树。如果特征不多，可以不考虑这个值，但是如果特征分成多的话，可以加以限制具体的值可以通过交叉验证得到。
+
+9.class_weight 指定样本各类别的的权重，主要是为了防止训练集某些类别的样本过多导致训练的决策树过于偏向这些类别。这里可以自己指定各个样本的权重如果使用“balanced”，则算法会自己计算权重，样本量少的类别所对应的样本权重会高。
+
+10.min_impurity_split 这个值限制了决策树的增长，如果某节点的不纯度(基尼系数，信息增益，均方差，绝对差)小于这个阈值则该节点不再生成子节点。即为叶子节点 。
+
+n_estimators:要建立树的个数
+
+#15.利用GridSearchCV选择合适的参数
+
+from sklearn.grid_search import GridSearchCV
+tree_param_grid = { 'min_samples_split': list((3,6,9)),'n_estimators':list((10,50,100))}
+                     #样本个数   3个参数                       n值（树的个数） 3个参数
+grid = GridSearchCV(RandomForestRegressor(),param_grid=tree_param_grid, cv=5)
+                     #算法                 参数的候选项（字典形式）   几次交叉验证（切分的是训练集，一般为5）
+grid.fit(data_train, target_train)
+
+grid.grid_scores_, grid.best_params_, grid.best_score_
